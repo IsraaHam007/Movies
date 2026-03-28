@@ -1,0 +1,204 @@
+{
+  "model_type": "GaussianNB",
+  "version": "v3",
+  "label": "6226 films  \u2014 dataset massif",
+  "normalization": "MinMax",
+  "features": [
+    "IMDB_Rating_MM",
+    "No_of_Votes_MM",
+    "Released_Year_MM",
+    "Custom_Popularity_MM",
+    "Blockbuster_Score_MM",
+    "Hidden_Gem_Score_MM",
+    "Votes_Log_MM",
+    "Rating_x_Votes_MM",
+    "Recent_Popularity_MM",
+    "High_Quality_MM"
+  ],
+  "num_classes": 4,
+  "class_names": [
+    "Drama",
+    "Action",
+    "Comedy",
+    "Crime_Horror"
+  ],
+  "genre_mapping": {
+    "genre_to_id": {
+      "Action": 0,
+      "Adventure": 1,
+      "Animation": 2,
+      "Biography": 3,
+      "Comedy": 4,
+      "Crime": 5,
+      "Drama": 6,
+      "Family": 7,
+      "Fantasy": 8,
+      "Film-Noir": 9,
+      "History": 10,
+      "Horror": 11,
+      "Music": 12,
+      "Musical": 13,
+      "Mystery": 14,
+      "Romance": 15,
+      "Sci-Fi": 16,
+      "Sport": 17,
+      "Thriller": 18,
+      "War": 19,
+      "Western": 20
+    },
+    "id_to_genre": {
+      "0": "Action",
+      "1": "Adventure",
+      "2": "Animation",
+      "3": "Biography",
+      "4": "Comedy",
+      "5": "Crime",
+      "6": "Drama",
+      "7": "Family",
+      "8": "Fantasy",
+      "9": "Film-Noir",
+      "10": "History",
+      "11": "Horror",
+      "12": "Music",
+      "13": "Musical",
+      "14": "Mystery",
+      "15": "Romance",
+      "16": "Sci-Fi",
+      "17": "Sport",
+      "18": "Thriller",
+      "19": "War",
+      "20": "Western"
+    },
+    "major_to_id": {
+      "Drama": 0,
+      "Action": 1,
+      "Comedy": 2,
+      "Crime_Horror": 3
+    },
+    "id_to_major": {
+      "0": "Drama",
+      "1": "Action",
+      "2": "Comedy",
+      "3": "Crime_Horror"
+    },
+    "subgenre_to_major": {
+      "Drama": "Drama",
+      "Biography": "Drama",
+      "Mystery": "Drama",
+      "Film-Noir": "Drama",
+      "Family": "Drama",
+      "Action": "Action",
+      "Adventure": "Action",
+      "Western": "Action",
+      "Fantasy": "Action",
+      "Thriller": "Action",
+      "Comedy": "Comedy",
+      "Animation": "Comedy",
+      "Crime": "Crime_Horror",
+      "Horror": "Crime_Horror"
+    },
+    "genre_groups": {
+      "Drama": [
+        "Drama",
+        "Biography",
+        "Mystery",
+        "Film-Noir",
+        "Family"
+      ],
+      "Action": [
+        "Action",
+        "Adventure",
+        "Western",
+        "Fantasy",
+        "Thriller"
+      ],
+      "Comedy": [
+        "Comedy",
+        "Animation"
+      ],
+      "Crime_Horror": [
+        "Crime",
+        "Horror"
+      ]
+    },
+    "total_subgenres": 21,
+    "total_major": 4
+  },
+  "cv_results": {
+    "cv5_mean": 0.4240285701393052,
+    "cv5_std": 0.002778493618845899,
+    "cv5_scores": [
+      0.4222,
+      0.4281,
+      0.4201,
+      0.4257,
+      0.4241
+    ],
+    "cv10_mean": 0.420174655360175,
+    "cv10_std": 0.013293668579262069,
+    "cv10_scores": [
+      0.4478,
+      0.3981,
+      0.4302,
+      0.4238,
+      0.4061,
+      0.4077,
+      0.4212,
+      0.4228,
+      0.418,
+      0.426
+    ]
+  },
+  "global_metrics": {
+    "accuracy": 0.41974317817014445,
+    "precision": 0.3477953135413032,
+    "recall": 0.41974317817014445,
+    "f1_score": 0.31471266392698016
+  },
+  "per_class_metrics": {
+    "Drama": {
+      "accuracy": 0.456661316211878,
+      "precision": 0.43911439114391143,
+      "recall": 0.8733944954128441,
+      "f1_score": 0.5844076120319214,
+      "support": 545,
+      "tp": 476,
+      "fp": 608,
+      "fn": 69,
+      "tn": 93
+    },
+    "Action": {
+      "accuracy": 0.6886035313001605,
+      "precision": 0.30357142857142855,
+      "recall": 0.09883720930232558,
+      "f1_score": 0.14912280701754385,
+      "support": 344,
+      "tp": 34,
+      "fp": 78,
+      "fn": 310,
+      "tn": 824
+    },
+    "Comedy": {
+      "accuracy": 0.8057784911717496,
+      "precision": 0.2682926829268293,
+      "recall": 0.04932735426008968,
+      "f1_score": 0.08333333333333333,
+      "support": 223,
+      "tp": 11,
+      "fp": 30,
+      "fn": 212,
+      "tn": 993
+    },
+    "Crime_Horror": {
+      "accuracy": 0.8884430176565008,
+      "precision": 0.2222222222222222,
+      "recall": 0.014925373134328358,
+      "f1_score": 0.027972027972027972,
+      "support": 134,
+      "tp": 2,
+      "fp": 7,
+      "fn": 132,
+      "tn": 1105
+    }
+  }
+}

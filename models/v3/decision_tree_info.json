@@ -1,0 +1,135 @@
+{
+  "model_type": "DecisionTreeClassifier",
+  "version": "v3",
+  "label": "6226 films  \u2014 dataset massif",
+  "best_normalization": "L1",
+  "features": [
+    "IMDB_Rating_MM",
+    "No_of_Votes_MM",
+    "Released_Year_MM",
+    "Custom_Popularity_MM",
+    "Blockbuster_Score_MM",
+    "Hidden_Gem_Score_MM",
+    "Votes_Log_MM",
+    "Rating_x_Votes_MM",
+    "Recent_Popularity_MM",
+    "High_Quality_MM"
+  ],
+  "best_params": {
+    "criterion": "gini",
+    "max_depth": 3,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2
+  },
+  "tree_depth": 3,
+  "n_leaves": 8,
+  "class_names": [
+    "Drama",
+    "Action",
+    "Comedy",
+    "Crime_Horror"
+  ],
+  "normalization_comparison": {
+    "MinMax": {
+      "cv5": 0.4362,
+      "cv10": 0.4332
+    },
+    "L1": {
+      "cv5": 0.4378,
+      "cv10": 0.4398
+    },
+    "L2": {
+      "cv5": 0.4351,
+      "cv10": 0.4306
+    }
+  },
+  "cv_results": {
+    "cv5_mean": 0.4378413815776751,
+    "cv5_std": 0.0026670540836040675,
+    "cv5_scores": [
+      0.4374,
+      0.4329,
+      0.4402,
+      0.4402,
+      0.4386
+    ],
+    "cv10_mean": 0.43976893261007566,
+    "cv10_std": 0.004425262322306369,
+    "cv10_scores": [
+      0.4398,
+      0.4398,
+      0.4478,
+      0.4366,
+      0.4382,
+      0.435,
+      0.4469,
+      0.4341,
+      0.4373,
+      0.4421
+    ]
+  },
+  "global_metrics": {
+    "accuracy": 0.43097913322632425,
+    "precision": 0.2667165745775186,
+    "recall": 0.43097913322632425,
+    "f1_score": 0.2875356644505598
+  },
+  "per_class_metrics": {
+    "Drama": {
+      "accuracy": 0.449438202247191,
+      "precision": 0.4402035623409669,
+      "recall": 0.9522935779816514,
+      "f1_score": 0.6020881670533643,
+      "support": 545,
+      "tp": 519,
+      "fp": 660,
+      "fn": 26,
+      "tn": 41
+    },
+    "Action": {
+      "accuracy": 0.6990369181380417,
+      "precision": 0.26865671641791045,
+      "recall": 0.05232558139534884,
+      "f1_score": 0.08759124087591241,
+      "support": 344,
+      "tp": 18,
+      "fp": 49,
+      "fn": 326,
+      "tn": 853
+    },
+    "Comedy": {
+      "accuracy": 0.8210272873194222,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 223,
+      "tp": 0,
+      "fp": 0,
+      "fn": 223,
+      "tn": 1023
+    },
+    "Crime_Horror": {
+      "accuracy": 0.8924558587479936,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 134,
+      "tp": 0,
+      "fp": 0,
+      "fn": 134,
+      "tn": 1112
+    }
+  },
+  "feature_importance": {
+    "IMDB_Rating_MM": 0.4621658997439006,
+    "Recent_Popularity_MM": 0.26911440388219054,
+    "Votes_Log_MM": 0.1393528040807245,
+    "Custom_Popularity_MM": 0.12936689229318432,
+    "No_of_Votes_MM": 0.0,
+    "Released_Year_MM": 0.0,
+    "Hidden_Gem_Score_MM": 0.0,
+    "Blockbuster_Score_MM": 0.0,
+    "Rating_x_Votes_MM": 0.0,
+    "High_Quality_MM": 0.0
+  }
+}

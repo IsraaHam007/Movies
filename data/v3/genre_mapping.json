@@ -1,0 +1,102 @@
+{
+  "genre_to_id": {
+    "Action": 0,
+    "Adventure": 1,
+    "Animation": 2,
+    "Biography": 3,
+    "Comedy": 4,
+    "Crime": 5,
+    "Drama": 6,
+    "Family": 7,
+    "Fantasy": 8,
+    "Film-Noir": 9,
+    "History": 10,
+    "Horror": 11,
+    "Music": 12,
+    "Musical": 13,
+    "Mystery": 14,
+    "Romance": 15,
+    "Sci-Fi": 16,
+    "Sport": 17,
+    "Thriller": 18,
+    "War": 19,
+    "Western": 20
+  },
+  "id_to_genre": {
+    "0": "Action",
+    "1": "Adventure",
+    "2": "Animation",
+    "3": "Biography",
+    "4": "Comedy",
+    "5": "Crime",
+    "6": "Drama",
+    "7": "Family",
+    "8": "Fantasy",
+    "9": "Film-Noir",
+    "10": "History",
+    "11": "Horror",
+    "12": "Music",
+    "13": "Musical",
+    "14": "Mystery",
+    "15": "Romance",
+    "16": "Sci-Fi",
+    "17": "Sport",
+    "18": "Thriller",
+    "19": "War",
+    "20": "Western"
+  },
+  "major_to_id": {
+    "Drama": 0,
+    "Action": 1,
+    "Comedy": 2,
+    "Crime_Horror": 3
+  },
+  "id_to_major": {
+    "0": "Drama",
+    "1": "Action",
+    "2": "Comedy",
+    "3": "Crime_Horror"
+  },
+  "subgenre_to_major": {
+    "Drama": "Drama",
+    "Biography": "Drama",
+    "Mystery": "Drama",
+    "Film-Noir": "Drama",
+    "Family": "Drama",
+    "Action": "Action",
+    "Adventure": "Action",
+    "Western": "Action",
+    "Fantasy": "Action",
+    "Thriller": "Action",
+    "Comedy": "Comedy",
+    "Animation": "Comedy",
+    "Crime": "Crime_Horror",
+    "Horror": "Crime_Horror"
+  },
+  "genre_groups": {
+    "Drama": [
+      "Drama",
+      "Biography",
+      "Mystery",
+      "Film-Noir",
+      "Family"
+    ],
+    "Action": [
+      "Action",
+      "Adventure",
+      "Western",
+      "Fantasy",
+      "Thriller"
+    ],
+    "Comedy": [
+      "Comedy",
+      "Animation"
+    ],
+    "Crime_Horror": [
+      "Crime",
+      "Horror"
+    ]
+  },
+  "total_subgenres": 21,
+  "total_major": 4
+}

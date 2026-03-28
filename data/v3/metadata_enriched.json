@@ -1,0 +1,25 @@
+{
+  "version": "v3",
+  "label": "6226 films  \u2014 dataset massif",
+  "csv_source": "imdb_top_1000_augmente_massif.csv",
+  "total_movies": 6226,
+  "features_ml": [
+    "IMDB_Rating_MM",
+    "No_of_Votes_MM",
+    "Released_Year_MM",
+    "Custom_Popularity_MM",
+    "Movie_Age_MM",
+    "Blockbuster_Score_MM",
+    "Hidden_Gem_Score_MM",
+    "Votes_Log_MM",
+    "Rating_x_Votes_MM",
+    "Recent_Popularity_MM",
+    "High_Quality_MM"
+  ],
+  "class_distribution": {
+    "Drama": 2724,
+    "Action": 1720,
+    "Comedy": 1111,
+    "Crime_Horror": 671
+  }
+}

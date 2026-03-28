@@ -1,0 +1,25 @@
+{
+  "version": "v1",
+  "label": "999  films  \u2014 dataset original IMDb",
+  "csv_source": "imdb_top_1000.csv",
+  "total_movies": 999,
+  "features_ml": [
+    "IMDB_Rating_MM",
+    "No_of_Votes_MM",
+    "Released_Year_MM",
+    "Custom_Popularity_MM",
+    "Movie_Age_MM",
+    "Blockbuster_Score_MM",
+    "Hidden_Gem_Score_MM",
+    "Votes_Log_MM",
+    "Rating_x_Votes_MM",
+    "Recent_Popularity_MM",
+    "High_Quality_MM"
+  ],
+  "class_distribution": {
+    "Drama": 394,
+    "Action": 250,
+    "Comedy": 237,
+    "Crime_Horror": 118
+  }
+}

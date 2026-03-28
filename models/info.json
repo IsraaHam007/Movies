@@ -1,0 +1,26 @@
+{
+  "features": [
+    "IMDB_Rating_MM",
+    "No_of_Votes_MM",
+    "Released_Year_MM",
+    "Custom_Popularity_MM",
+    "Blockbuster_Score_MM",
+    "Hidden_Gem_Score_MM",
+    "Votes_Log_MM",
+    "Rating_x_Votes_MM",
+    "Recent_Popularity_MM",
+    "High_Quality_MM"
+  ],
+  "metrics": {
+    "accuracy": 0.41974317817014445,
+    "precision": 0.3477953135413032,
+    "recall": 0.41974317817014445,
+    "f1": 0.31471266392698016
+  },
+  "classes": [
+    "Drama",
+    "Action",
+    "Comedy",
+    "Crime_Horror"
+  ]
+}
