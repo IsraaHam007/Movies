@@ -1,30 +1,14 @@
 """
-🌳 ARBRE DE DÉCISION — V4
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ADAPTATIONS PAR RAPPORT À V3 :
+ARBRE DE DECISION — V4
+Dataset : classes equilibrees — features optimisees
+Prerequis : Data_preprocessing_v4.py doit avoir ete lance avant.
 
-  FEATURES :
-  ❌ V3 : 10 features corrélées (corr jusqu'à 1.00)
-  ✅ V4 : 4 features indépendantes issues de preprocessing_v4 :
-          → IMDB_Rating_MM   (normalisée MinMax)
-          → Votes_Log_MM     (normalisée MinMax)
-          → Movie_Age_MM     (normalisée MinMax)
-          → Is_Hidden_Gem    (binaire 0/1, non normalisée)
-
-  NORMALISATION L1 / L2 :
-  ❌ V3 : appliquait L1/L2 sur 10 features déjà normalisées → inutile
-  ✅ V4 : L1/L2 appliquées uniquement sur les 3 features continues MM
-          Is_Hidden_Gem binaire exclue de L1/L2 puis réintégrée
-
-  FICHIERS :
-  ❌ V3 : movies_processed_enriched.csv + genre_mapping.json
-  ✅ V4 : movies_processed_v4.csv       + genre_mapping_v4.json
-
-  CLASSES :
-  ❌ V3 : Drama = 43.8% → biais
-  ✅ V4 : classes équilibrées par undersampling (preprocessing_v4)
-
-Prérequis : Data_preprocessing_v4.py doit avoir été lancé avant.
+Differences avec V3 :
+  - 4 features independantes au lieu de 10 correlees
+  - L1/L2 appliquees uniquement sur les 3 features continues
+    Is_Hidden_Gem binaire exclue de L1/L2 puis reintegree
+  - Fichiers V4 : movies_processed_v4.csv + genre_mapping_v4.json
+  - Classes equilibrees par undersampling (preprocessing_v4)
 """
 
 import pandas as pd
@@ -38,39 +22,40 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, classification_report, confusion_matrix)
 from pathlib import Path
 
+# ----------------------------------------------------------------------------
+# CONFIGURATION GENERALE
+# ----------------------------------------------------------------------------
+
 VERSION    = 'v4'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR   = os.path.join(SCRIPT_DIR, 'data',   VERSION)
 MODELS_DIR = os.path.join(SCRIPT_DIR, 'models', VERSION)
 Path(MODELS_DIR).mkdir(parents=True, exist_ok=True)
 
-# ── Features V4 ─────────────────────────────────────────────────────────────
-# 3 features continues (seront soumises à L1/L2) + 1 binaire (exclue)
+# Separation features continues / binaire
+# Pourquoi separer ? L1/L2 ne doivent pas etre appliquees sur Is_Hidden_Gem
+# car normaliser un binaire 0/1 n'a aucun sens mathematique
 CONTINUOUS_FEATURES = ['IMDB_Rating_MM', 'Votes_Log_MM', 'Movie_Age_MM']
 BINARY_FEATURES     = ['Is_Hidden_Gem']
 ALL_FEATURES        = CONTINUOUS_FEATURES + BINARY_FEATURES
 
-print("\n" + "🌳"*40)
-print("  ARBRE DE DÉCISION V4 — Features optimisées + Normalisation corrigée")
-print("🌳"*40 + "\n")
+print(f"\n=== ARBRE DE DECISION {VERSION.upper()} — Features optimisees + Normalisation corrigee ===\n")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 1. CHARGEMENT
-# ══════════════════════════════════════════════════════════════════════════
-print("="*70)
-print("📥 CHARGEMENT")
-print("="*70)
+# ----------------------------------------------------------------------------
+# CHARGEMENT DES DONNEES V4
+# On utilise les fichiers specifiques a la V4 (pas les memes qu'en V3)
+# ----------------------------------------------------------------------------
 
 csv_file     = os.path.join(DATA_DIR, 'movies_processed_v4.csv')
 mapping_file = os.path.join(DATA_DIR, 'genre_mapping_v4.json')
 
 if not os.path.exists(csv_file):
-    print(f"❌ ERREUR : fichier introuvable → {csv_file}")
-    print(f"   Lance d'abord : python Data_preprocessing_v4.py")
+    print(f"ERREUR : fichier introuvable -> {csv_file}")
+    print(f"Lance d'abord : python Data_preprocessing_v4.py")
     exit(1)
 
 df = pd.read_csv(csv_file)
-print(f"  ✅ {len(df)} films chargés depuis movies_processed_v4.csv")
+print(f"{len(df)} films charges depuis movies_processed_v4.csv")
 
 with open(mapping_file) as f:
     genre_mapping = json.load(f)
@@ -79,68 +64,72 @@ MAJOR_TO_ID = genre_mapping['major_to_id']
 ID_TO_MAJOR = {int(k): v for k, v in genre_mapping['id_to_major'].items()}
 CLASS_NAMES = list(MAJOR_TO_ID.keys())
 
-print(f"\n  Classes : {CLASS_NAMES}")
-print(f"\n  Distribution (équilibrée par preprocessing_v4) :")
+print(f"Classes : {CLASS_NAMES}")
+print("\nDistribution (equilibree par preprocessing_v4) :")
 for cat, cnt in df['Genre_Major'].value_counts().items():
     pct = cnt / len(df) * 100
-    bar = '█' * (cnt // 30)
-    print(f"    {cat:15} : {cnt:5} ({pct:.1f}%)  {bar}")
+    print(f"  {cat:15} : {cnt:5} ({pct:.1f}%)")
 
-# Vérification features
+# Verification que toutes les features attendues existent dans le CSV
 missing = [f for f in ALL_FEATURES if f not in df.columns]
 if missing:
-    print(f"\n❌ Features manquantes : {missing}")
-    print(f"   Relance Data_preprocessing_v4.py")
+    print(f"\nERREUR : features manquantes : {missing}")
+    print(f"Relance Data_preprocessing_v4.py")
     exit(1)
 
-print(f"\n  Features continues ({len(CONTINUOUS_FEATURES)}) : {CONTINUOUS_FEATURES}")
-print(f"  Features binaires  ({len(BINARY_FEATURES)})     : {BINARY_FEATURES}")
+print(f"\nFeatures continues ({len(CONTINUOUS_FEATURES)}) : {CONTINUOUS_FEATURES}")
+print(f"Features binaires  ({len(BINARY_FEATURES)})     : {BINARY_FEATURES}")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 2. PRÉPARATION X / y ET NORMALISATIONS
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("📐 PRÉPARATION FEATURES ET NORMALISATIONS")
-print("="*70)
+# ----------------------------------------------------------------------------
+# PREPARATION DES FEATURES ET DES 3 NORMALISATIONS
+#
+# Correction majeure par rapport a V3 :
+# En V3, L1/L2 etaient appliquees sur les 10 features en bloc,
+# y compris sur Is_Hidden_Gem qui est binaire (0/1).
+# En V4, on applique L1/L2 UNIQUEMENT sur les 3 features continues,
+# puis on recolle Is_Hidden_Gem sans la modifier.
+#
+# np.hstack : concatene deux matrices horizontalement
+# Ex : [rating_l1, votes_l1, age_l1] + [is_hidden_gem] = 4 colonnes
+# ----------------------------------------------------------------------------
+
+print("\n--- Preparation des features et normalisations ---")
 
 y = df['Genre_Major_ID'].values
 
-# Matrices de base
-X_cont   = df[CONTINUOUS_FEATURES].values   # 3 features continues
-X_binary = df[BINARY_FEATURES].values       # 1 feature binaire
+# Separation des features en deux groupes
+X_cont   = df[CONTINUOUS_FEATURES].values  # 3 features continues
+X_binary = df[BINARY_FEATURES].values      # 1 feature binaire
 
-# MinMax : déjà fait en preprocessing → on réutilise directement
+# MinMax : deja applique en preprocessing, on reutilise directement
 X_mm = df[ALL_FEATURES].values
 
-# L1 et L2 : appliquées SEULEMENT sur les 3 features continues
-# puis on réintègre Is_Hidden_Gem sans la normaliser
-# Raison : normaliser un binaire 0/1 n'a aucun sens mathématique
+# L1 sur les 3 features continues uniquement, puis reintegration du binaire
 X_cont_l1 = normalize(X_cont, norm='l1')
+X_l1      = np.hstack([X_cont_l1, X_binary])
+
+# L2 sur les 3 features continues uniquement, puis reintegration du binaire
 X_cont_l2 = normalize(X_cont, norm='l2')
+X_l2      = np.hstack([X_cont_l2, X_binary])
 
-X_l1 = np.hstack([X_cont_l1, X_binary])   # 3 features L1 + binaire brute
-X_l2 = np.hstack([X_cont_l2, X_binary])   # 3 features L2 + binaire brute
+NORM_SETS = {'MinMax': X_mm, 'L1': X_l1, 'L2': X_l2}
 
-NORM_SETS = {
-    'MinMax': X_mm,
-    'L1':     X_l1,
-    'L2':     X_l2
-}
-
-print(f"\n  MinMax : features déjà normalisées par preprocessing_v4")
+print(f"  MinMax : features directement issues du preprocessing_v4")
 print(f"  L1     : norm L1 sur {CONTINUOUS_FEATURES}")
-print(f"           Is_Hidden_Gem réintégrée sans normalisation")
+print(f"           Is_Hidden_Gem reintegree sans normalisation")
 print(f"  L2     : norm L2 sur {CONTINUOUS_FEATURES}")
-print(f"           Is_Hidden_Gem réintégrée sans normalisation")
-print(f"\n  Vérif L1 ligne 0 — somme features continues = {X_cont_l1[0].sum():.6f}")
-print(f"  Vérif L2 ligne 0 — norme features continues = {np.linalg.norm(X_cont_l2[0]):.6f}")
+print(f"           Is_Hidden_Gem reintegree sans normalisation")
+# Verification : somme L1 et norme L2 doivent valoir 1.0 pour les features continues
+print(f"\n  Verif L1 ligne 0 — somme features continues = {X_cont_l1[0].sum():.6f}  (doit etre 1.0)")
+print(f"  Verif L2 ligne 0 — norme features continues = {np.linalg.norm(X_cont_l2[0]):.6f}  (doit etre 1.0)")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 3. GRIDSEARCH HYPERPARAMÈTRES (sur MinMax)
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("⚙️  OPTIMISATION HYPERPARAMÈTRES (GridSearchCV sur MinMax)")
-print("="*70)
+# ----------------------------------------------------------------------------
+# GRIDSEARCH : RECHERCHE DES MEILLEURS HYPERPARAMETRES
+# Le GridSearch est effectue sur MinMax pour trouver les meilleurs parametres
+# Ces parametres seront ensuite utilises pour les 3 normalisations
+# ----------------------------------------------------------------------------
+
+print("\n--- Recherche des meilleurs hyperparametres (GridSearchCV sur MinMax) ---")
 
 param_grid = {
     'max_depth':         [3, 5, 7, 10, 15, None],
@@ -160,57 +149,58 @@ gs = GridSearchCV(
 gs.fit(X_mm, y)
 best_params = gs.best_params_
 
-print(f"\n  Meilleurs hyperparamètres :")
+print(f"\n  Meilleurs hyperparametres :")
 for k, v in best_params.items():
     print(f"    {k:22} = {v}")
 print(f"  Accuracy CV GridSearch = {gs.best_score_:.4f}")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 4. CROSS-VALIDATION MinMax / L1 / L2
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("📐 CROSS-VALIDATION 5-fold & 10-fold PAR NORMALISATION")
-print("="*70)
+# ----------------------------------------------------------------------------
+# CROSS-VALIDATION PAR NORMALISATION
+# On evalue les 3 normalisations avec les meilleurs hyperparametres
+# pour determiner laquelle est la plus performante sur les 4 features V4
+# ----------------------------------------------------------------------------
 
-cv5  = StratifiedKFold(n_splits=5,  shuffle=True, random_state=42)
-cv10 = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
-best_dt = DecisionTreeClassifier(**best_params, random_state=42)
+print("\n--- Cross-validation (5-fold et 10-fold) par normalisation ---")
 
+cv5      = StratifiedKFold(n_splits=5,  shuffle=True, random_state=42)
+cv10     = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+best_dt  = DecisionTreeClassifier(**best_params, random_state=42)
 norm_results = {}
+
 for nm, X_norm in NORM_SETS.items():
     s5  = cross_val_score(best_dt, X_norm, y, cv=cv5,  scoring='accuracy')
     s10 = cross_val_score(best_dt, X_norm, y, cv=cv10, scoring='accuracy')
     norm_results[nm] = {
-        'cv5_mean':   float(s5.mean()),
-        'cv5_std':    float(s5.std()),
-        'cv5_scores': [round(float(s), 4) for s in s5],
-        'cv10_mean':  float(s10.mean()),
-        'cv10_std':   float(s10.std()),
-        'cv10_scores':[round(float(s), 4) for s in s10],
+        'cv5_mean':    float(s5.mean()),
+        'cv5_std':     float(s5.std()),
+        'cv5_scores':  [round(float(s), 4) for s in s5],
+        'cv10_mean':   float(s10.mean()),
+        'cv10_std':    float(s10.std()),
+        'cv10_scores': [round(float(s), 4) for s in s10],
     }
     print(f"\n  [{nm}]")
-    print(f"    5-fold  → {s5.mean():.4f} ±{s5.std():.4f}  {[round(s,4) for s in s5]}")
-    print(f"    10-fold → {s10.mean():.4f} ±{s10.std():.4f}  {[round(s,4) for s in s10]}")
+    print(f"    5-fold  -> {s5.mean():.4f} +-{s5.std():.4f}  {[round(s,4) for s in s5]}")
+    print(f"    10-fold -> {s10.mean():.4f} +-{s10.std():.4f}  {[round(s,4) for s in s10]}")
 
+# Selection de la meilleure normalisation selon le score 5-fold
 best_norm_name = max(norm_results, key=lambda k: norm_results[k]['cv5_mean'])
-X_best = NORM_SETS[best_norm_name]
+X_best         = NORM_SETS[best_norm_name]
 
-print(f"\n  {'Normalisation':<10} {'CV 5-fold':>14} {'CV 10-fold':>14}  Verdict")
+print(f"\n  Normalisation    CV 5-fold       CV 10-fold   Verdict")
 print(f"  {'-'*55}")
 for nm, res in norm_results.items():
-    tag = "  🏆" if nm == best_norm_name else ""
-    print(f"  {nm:<10} {res['cv5_mean']:.4f} ±{res['cv5_std']:.4f}"
-          f"  {res['cv10_mean']:.4f} ±{res['cv10_std']:.4f}{tag}")
+    tag = "  <- meilleure" if nm == best_norm_name else ""
+    print(f"  {nm:<10} {res['cv5_mean']:.4f} +-{res['cv5_std']:.4f}"
+          f"  {res['cv10_mean']:.4f} +-{res['cv10_std']:.4f}{tag}")
 
 print(f"\n  Meilleure normalisation : {best_norm_name}"
       f" (CV5 = {norm_results[best_norm_name]['cv5_mean']:.4f})")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 5. ENTRAÎNEMENT FINAL
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print(f"🎓 ENTRAÎNEMENT FINAL — DecisionTree + {best_norm_name}")
-print("="*70)
+# ----------------------------------------------------------------------------
+# ENTRAINEMENT FINAL avec les meilleurs hyperparametres et la meilleure norm
+# ----------------------------------------------------------------------------
+
+print(f"\n--- Entrainement final — DecisionTree + {best_norm_name} ---")
 
 X_train, X_test, y_train, y_test = train_test_split(
     X_best, y, test_size=0.2, random_state=42, stratify=y
@@ -225,33 +215,33 @@ y_pred = final_model.predict(X_test)
 print(f"  Profondeur : {final_model.get_depth()}")
 print(f"  Feuilles   : {final_model.get_n_leaves()}")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 6. MÉTRIQUES GLOBALES
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("📈 MÉTRIQUES GLOBALES")
-print("="*70)
+# ----------------------------------------------------------------------------
+# METRIQUES GLOBALES
+# ----------------------------------------------------------------------------
+
+print("\n--- Metriques globales ---")
 
 acc = accuracy_score(y_test, y_pred)
 pre = precision_score(y_test, y_pred, average='weighted', zero_division=0)
 rec = recall_score(y_test,    y_pred, average='weighted', zero_division=0)
 f1  = f1_score(y_test,        y_pred, average='weighted', zero_division=0)
 
-print(f"\n  Accuracy : {acc:.4f}  ({acc*100:.2f}%)")
+print(f"  Accuracy : {acc:.4f}  ({acc*100:.2f}%)")
 print(f"  Precision: {pre:.4f}")
 print(f"  Recall   : {rec:.4f}")
 print(f"  F1-Score : {f1:.4f}")
 
-print(f"\n  Comparaison V3 → V4 :")
+print(f"\n  Comparaison V3 -> V4 :")
 print(f"    Accuracy V3 : (voir models/v3/decision_tree_info.json)")
 print(f"    Accuracy V4 : {acc*100:.2f}%")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 7. MÉTRIQUES PAR CATÉGORIE
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("📊 MÉTRIQUES PAR CATÉGORIE")
-print("="*70)
+# ----------------------------------------------------------------------------
+# METRIQUES PAR CATEGORIE
+# En V4, on s'attend a des F1 plus equilibres entre les genres
+# car les classes ont ete reparties uniformement par undersampling
+# ----------------------------------------------------------------------------
+
+print("\n--- Metriques par categorie ---")
 
 print("\n" + classification_report(y_test, y_pred, target_names=CLASS_NAMES, zero_division=0))
 
@@ -260,7 +250,7 @@ report_dict = classification_report(
     output_dict=True, zero_division=0
 )
 
-print(f"  {'Catégorie':<18} {'Accuracy':>10} {'Precision':>11} {'Recall':>8} {'F1':>8} {'Support':>9}")
+print(f"  {'Categorie':<18} {'Accuracy':>10} {'Precision':>11} {'Recall':>8} {'F1':>8} {'Support':>9}")
 print(f"  {'-'*68}")
 
 per_class_metrics = {}
@@ -269,8 +259,8 @@ for cat in CLASS_NAMES:
         continue
     r      = report_dict[cat]
     cat_id = MAJOR_TO_ID[cat]
-    mask_t = (y_test == cat_id)
-    mask_p = (y_pred == cat_id)
+    mask_t = (y_test == cat_id)  # films qui sont vraiment de ce genre
+    mask_p = (y_pred == cat_id)  # films que le modele predit comme ce genre
     tp = ( mask_t &  mask_p).sum()
     fp = (~mask_t &  mask_p).sum()
     fn = ( mask_t & ~mask_p).sum()
@@ -288,7 +278,7 @@ for cat in CLASS_NAMES:
     print(f"  {cat:<18} {cat_acc:>10.4f} {r['precision']:>11.4f} "
           f"{r['recall']:>8.4f} {r['f1-score']:>8.4f} {int(r['support']):>9}")
 
-# Matrice de confusion
+# Matrice de confusion : diagonale = bonnes predictions
 cm = confusion_matrix(y_test, y_pred)
 print(f"\n  Matrice de confusion :")
 print(f"  {'':18}" + "".join(f"{n:>14}" for n in CLASS_NAMES))
@@ -297,15 +287,17 @@ for i, row in enumerate(cm):
 
 best_cat  = max(per_class_metrics, key=lambda k: per_class_metrics[k]['f1_score'])
 worst_cat = min(per_class_metrics, key=lambda k: per_class_metrics[k]['f1_score'])
-print(f"\n  ✅ Meilleure : {best_cat}  (F1={per_class_metrics[best_cat]['f1_score']:.4f})")
-print(f"  ⚠️  Pire     : {worst_cat} (F1={per_class_metrics[worst_cat]['f1_score']:.4f})")
+print(f"\n  Meilleure categorie : {best_cat}  (F1={per_class_metrics[best_cat]['f1_score']:.4f})")
+print(f"  Pire categorie      : {worst_cat} (F1={per_class_metrics[worst_cat]['f1_score']:.4f})")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 8. IMPORTANCE DES FEATURES
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("🔍 IMPORTANCE DES FEATURES")
-print("="*70)
+# ----------------------------------------------------------------------------
+# IMPORTANCE DES FEATURES
+# Indique quelles features l'arbre utilise le plus pour ses coupures
+# En V4, on s'attend a voir Is_Hidden_Gem contribuer differemment
+# car c'est une feature binaire (les arbres les gerent bien nativement)
+# ----------------------------------------------------------------------------
+
+print("\n--- Importance des features ---")
 
 fi = pd.Series(
     final_model.feature_importances_,
@@ -313,15 +305,16 @@ fi = pd.Series(
 ).sort_values(ascending=False)
 
 for feat, imp in fi.items():
-    bar = '█' * int(imp * 50)
+    bar = '|' * int(imp * 50)
     print(f"  {feat:25} : {imp:.4f}  {bar}")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 9. COMPARAISON NB V4 vs DT V4
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print("⚖️  COMPARAISON : NAIVE BAYES V4 vs ARBRE DE DÉCISION V4")
-print("="*70)
+# ----------------------------------------------------------------------------
+# COMPARAISON NAIVE BAYES V4 vs ARBRE DE DECISION V4
+# Prerequis : Naive_Bayes_v4.py doit avoir ete lance avant
+# Les deux modeles utilisent exactement les memes features et donnees
+# ----------------------------------------------------------------------------
+
+print("\n--- Comparaison : Naive Bayes V4 vs Arbre de Decision V4 ---")
 
 nb_path = os.path.join(MODELS_DIR, 'model_info.json')
 if os.path.exists(nb_path):
@@ -330,7 +323,7 @@ if os.path.exists(nb_path):
     nb_g  = nb_info.get('global_metrics', {})
     nb_pc = nb_info.get('per_class_metrics', {})
 
-    print(f"\n  {'Métrique':<12} {'Naive Bayes':>14} {'Arbre Décision':>16}  Δ")
+    print(f"\n  {'Metrique':<12} {'Naive Bayes':>14} {'Arbre Decision':>16}  Delta")
     print(f"  {'-'*58}")
     for label, (key, dt_val) in {
         'Accuracy':  ('accuracy',  acc),
@@ -341,28 +334,29 @@ if os.path.exists(nb_path):
         nb_val = nb_g.get(key, 0)
         d = dt_val - nb_val
         s = '+' if d >= 0 else ''
-        w = '← DT' if d > 0 else ('← NB' if d < 0 else '=')
+        w = '<- DT' if d > 0 else ('<- NB' if d < 0 else '=')
         print(f"  {label:<12} {nb_val:>14.4f} {dt_val:>16.4f}  {s}{d:.4f}  {w}")
 
-    print(f"\n  Par catégorie :")
-    print(f"  {'Catégorie':<18} {'NB F1':>8} {'DT F1':>8}  Δ      Meilleur")
+    print(f"\n  Par categorie :")
+    print(f"  {'Categorie':<18} {'NB F1':>8} {'DT F1':>8}  Delta  Meilleur")
     print(f"  {'-'*55}")
     for cat in CLASS_NAMES:
         dt_f1 = per_class_metrics[cat]['f1_score']
         nb_f1 = nb_pc.get(cat, {}).get('f1_score', 0)
         d = dt_f1 - nb_f1
         s = '+' if d >= 0 else ''
-        w = 'DT ✅' if d > 0.005 else ('NB ✅' if d < -0.005 else 'Égal')
+        w = 'DT' if d > 0.005 else ('NB' if d < -0.005 else 'Egal')
         print(f"  {cat:<18} {nb_f1:>8.4f} {dt_f1:>8.4f}  {s}{d:.4f}  {w}")
 else:
     print(f"  Lance d'abord Naive_Bayes_v4.py pour avoir la comparaison NB vs DT")
 
-# ══════════════════════════════════════════════════════════════════════════
-# 10. SAUVEGARDE
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "="*70)
-print(f"💾 SAUVEGARDE → models/{VERSION}/")
-print("="*70)
+# ----------------------------------------------------------------------------
+# SAUVEGARDE DU MODELE ET DES METRIQUES
+# l1_l2_note : note sauvegardee pour rappeler le traitement specifique
+# du binaire Is_Hidden_Gem lors des normalisations L1/L2
+# ----------------------------------------------------------------------------
+
+print(f"\n--- Sauvegarde -> models/{VERSION}/ ---")
 
 dt_model_path = os.path.join(MODELS_DIR, 'decision_tree_model.pkl')
 with open(dt_model_path, 'wb') as f:
@@ -395,9 +389,10 @@ dt_info = {
     },
     'per_class_metrics': per_class_metrics,
     'feature_importance': fi.to_dict(),
+    # Note sur le traitement specifique de L1/L2 en V4
     'l1_l2_note': (
-        'L1/L2 appliquées seulement sur les 3 features continues. '
-        'Is_Hidden_Gem (binaire) réintégrée sans normalisation.'
+        'L1/L2 appliquees seulement sur les 3 features continues. '
+        'Is_Hidden_Gem (binaire) reintegree sans normalisation.'
     )
 }
 
@@ -405,24 +400,14 @@ dt_info_path = os.path.join(MODELS_DIR, 'decision_tree_info.json')
 with open(dt_info_path, 'w') as f:
     json.dump(dt_info, f, indent=2)
 
-print(f"  ✅ models/{VERSION}/decision_tree_model.pkl")
-print(f"  ✅ models/{VERSION}/decision_tree_info.json")
+print(f"  models/{VERSION}/decision_tree_model.pkl")
+print(f"  models/{VERSION}/decision_tree_info.json")
 
-print(f"""
-{"="*70}
-✅ ARBRE DE DÉCISION V4
-  Normalisation : {best_norm_name}
-  Profondeur    : {final_model.get_depth()}
-  Feuilles      : {final_model.get_n_leaves()}
-  Accuracy      : {acc:.4f}  |  F1 : {f1:.4f}
-  CV5           : {norm_results[best_norm_name]['cv5_mean']:.4f} ±{norm_results[best_norm_name]['cv5_std']:.4f}
-
-  Features utilisées : {ALL_FEATURES}
-  L1/L2 sur          : {CONTINUOUS_FEATURES} uniquement
-{"="*70}
-
-⏭️  Pour pousser sur Git :
-    git add Decision_tree_v4.py
-    git commit -m "feat: Decision Tree V4 adapté aux features optimisées V4"
-    git push
-""")
+print(f"\n=== ARBRE DE DECISION {VERSION.upper()} TERMINE ===")
+print(f"  Normalisation : {best_norm_name}")
+print(f"  Profondeur    : {final_model.get_depth()}  |  Feuilles : {final_model.get_n_leaves()}")
+print(f"  Accuracy      : {acc:.4f}  |  F1 : {f1:.4f}")
+print(f"  CV5           : {norm_results[best_norm_name]['cv5_mean']:.4f} "
+      f"+-{norm_results[best_norm_name]['cv5_std']:.4f}")
+print(f"\n  Features utilisees   : {ALL_FEATURES}")
+print(f"  L1/L2 appliquees sur : {CONTINUOUS_FEATURES} uniquement")
