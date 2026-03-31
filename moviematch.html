@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieMatch — Ton film, ton humeur, ce soir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080812;--surface:#0e0e1c;--card:#13132a;--card2:#181830;
+  --gold:#d4a843;--gold-l:#f0c860;--gold-bg:rgba(212,168,67,.12);--gold-b:rgba(212,168,67,.28);
+  --cyan:#3ecfcf;--cyan-bg:rgba(62,207,207,.1);
+  --pink:#e84393;--pink-bg:rgba(232,67,147,.1);
+  --green:#3ece8a;--green-bg:rgba(62,206,138,.1);
+  --text:#f4f0ec;--muted:#6b6880;--dim:#9896a8;
+  --bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.13);
+  --r:16px;--rs:10px;
+  --fd:'Playfair Display',Georgia,serif;
+  --fb:'DM Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px;line-height:1.6;overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.055'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;mix-blend-mode:overlay;opacity:.6}
+.ambiglow{position:fixed;top:-30%;left:-20%;width:140%;height:80%;background:radial-gradient(ellipse at 30% 40%,rgba(212,168,67,.04) 0%,transparent 60%),radial-gradient(ellipse at 70% 20%,rgba(62,207,207,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+header{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 44px;height:66px;background:rgba(8,8,18,.9);backdrop-filter:blur(18px) saturate(180%);border-bottom:1px solid var(--bdr)}
+.logo{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--text);text-decoration:none;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo span{color:var(--gold)}
+nav{display:flex;gap:32px}
+nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;transition:color .2s}
+nav a:hover{color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:16px}
+#apiDot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:background .5s;flex-shrink:0}
+#apiDot.on{background:var(--green);box-shadow:0 0 8px rgba(62,206,138,.6)}
+
+.hero{
+  padding:72px 44px 44px;
+  position:relative;
+  z-index:1;
+  min-height:calc(100vh - 66px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.hero-inner{
+  max-width:900px;
+  width:100%;
+  margin:0 auto;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:var(--gold-bg);
+  border:1px solid var(--gold-b);
+  border-radius:100px;
+  padding:6px 16px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin:0 auto 26px;
+}
+.eyebrow-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:pd 2s ease infinite}
+@keyframes pd{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+.hero h1{
+  font-family:var(--fd);
+  font-size:clamp(54px,7vw,92px);
+  font-weight:400;
+  line-height:1.02;
+  margin-bottom:20px;
+  letter-spacing:-.03em;
+}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{
+  color:var(--dim);
+  font-size:16px;
+  max-width:700px;
+  margin:0 auto 38px;
+  line-height:1.75;
+}
+
+.search-row{
+  display:flex;
+  gap:12px;
+  max-width:860px;
+  width:100%;
+  justify-content:center;
+  align-items:center;
+}
+.search-wrap{
+  flex:1;
+  max-width:620px;
+  position:relative;
+}
+.search-bar{width:100%;height:56px;padding:0 20px 0 48px;background:var(--card);border:1px solid var(--bdr);border-radius:100px;color:var(--text);font-family:var(--fb);font-size:15px;outline:none;cursor:pointer;transition:border-color .25s,box-shadow .25s}
+.search-bar::placeholder{color:var(--muted)}
+.search-bar:focus{border-color:var(--gold-b);box-shadow:0 0 0 4px var(--gold-bg);cursor:text}
+.s-ico{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.btn-qh{height:56px;padding:0 26px;background:var(--gold);color:#0a0800;border:none;border-radius:100px;font-family:var(--fb);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:background .2s,transform .15s;flex-shrink:0}
+.btn-qh:hover{background:var(--gold-l);transform:translateY(-1px)}
+.btn-qh:active{transform:scale(.97)}
+
+.stats-bar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:28px 44px;
+  border-bottom:1px solid var(--bdr);
+  position:relative;
+  z-index:1;
+  gap:0;
+}
+.stat{padding:0 40px;border-right:1px solid var(--bdr)}
+.stat:first-child{padding-left:0}
+.stat:last-child{border-right:none}
+.stat-n{font-family:var(--fd);font-size:28px;font-weight:700;color:var(--gold);line-height:1}
+.stat-l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+
+.pills{
+  display:flex;
+  gap:8px;
+  padding:28px 44px 0;
+  flex-wrap:wrap;
+  justify-content:center;
+  position:relative;
+  z-index:1;
+}
+.pill{padding:9px 18px;border-radius:100px;border:1px solid var(--bdr);background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all .22s;font-family:var(--fb);display:flex;align-items:center;gap:6px}
+.pill:hover{border-color:var(--bdr2);color:var(--text)}
+.pill.active{border-color:var(--gold-b);color:var(--gold);background:var(--gold-bg)}
+
+.section-hd{display:flex;align-items:baseline;justify-content:space-between;padding:28px 44px 20px;position:relative;z-index:1}
+.section-hd h2{font-family:var(--fd);font-size:26px;font-weight:400}
+.section-hd span{font-size:13px;color:var(--muted)}
+
+.movies-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:18px;padding:0 44px 70px;position:relative;z-index:1}
+.mc{border-radius:var(--r);overflow:hidden;background:var(--card);border:1px solid var(--bdr);cursor:pointer;transition:transform .35s cubic-bezier(.22,.87,.35,1.2),border-color .25s,box-shadow .35s;position:relative;animation:fu .5s ease both}
+@keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.mc:nth-child(2){animation-delay:.04s}.mc:nth-child(3){animation-delay:.08s}.mc:nth-child(4){animation-delay:.12s}.mc:nth-child(5){animation-delay:.16s}.mc:nth-child(6){animation-delay:.2s}.mc:nth-child(7){animation-delay:.24s}.mc:nth-child(8){animation-delay:.28s}.mc:nth-child(n+9){animation-delay:.3s}
+.mc:hover{transform:translateY(-9px) scale(1.015);border-color:rgba(212,168,67,.35);box-shadow:0 28px 56px rgba(0,0,0,.55),0 0 0 1px rgba(212,168,67,.1)}
+.mc-poster{width:100%;height:260px;object-fit:cover;display:block;background:var(--card2)}
+.mc-poster-err{width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+.mc-poster-err::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.92) 0%,transparent 60%)}
+.mc-ov{position:absolute;top:0;left:0;right:0;height:260px;background:linear-gradient(to top,rgba(8,8,18,.95) 0%,rgba(8,8,18,.08) 55%,transparent 100%);pointer-events:none}
+.mc-rating{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);border:1px solid rgba(212,168,67,.4);border-radius:100px;font-size:11px;font-weight:600;padding:3px 10px;color:var(--gold)}
+.mc-tbadge{position:absolute;top:10px;left:10px;border-radius:100px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;backdrop-filter:blur(8px)}
+.mc-info{padding:13px 15px 15px}
+.mc-title{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-meta{font-size:11px;color:var(--muted)}
+.mc-genre{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:100px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.gd .mc-genre{background:rgba(212,168,67,.15);color:var(--gold)}
+.ga .mc-genre{background:rgba(62,207,207,.12);color:var(--cyan)}
+.gc .mc-genre{background:rgba(62,206,138,.12);color:var(--green)}
+.gh .mc-genre{background:rgba(232,67,147,.12);color:var(--pink)}
+
+.ov{position:fixed;inset:0;background:rgba(4,4,14,.82);backdrop-filter:blur(12px);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:16px}
+.ov.open{opacity:1;pointer-events:all}
+.popup{background:var(--surface);border:1px solid rgba(212,168,67,.25);border-radius:26px;padding:46px 50px;max-width:520px;width:100%;text-align:center;position:relative;transform:scale(.88) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.ov.open .popup{transform:scale(1) translateY(0)}
+.popup-tape{position:absolute;top:-18px;left:50%;transform:translateX(-50%);background:var(--gold);color:#0a0800;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 18px;border-radius:4px;white-space:nowrap}
+.popup h2{font-family:var(--fd);font-size:32px;font-weight:400;margin-bottom:16px;line-height:1.18}
+.popup-emo{font-size:52px;display:block;margin-bottom:16px;line-height:1}
+.popup p{color:var(--dim);font-size:14px;line-height:1.8;margin-bottom:30px}
+.popup p strong{color:var(--text);font-weight:500}
+.pop-btns{display:flex;flex-direction:column;gap:11px}
+
+.qmodal{background:var(--surface);border:1px solid var(--bdr2);border-radius:26px;padding:38px 42px 44px;max-width:600px;width:100%;position:relative;transform:scale(.88) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-height:90vh;overflow-y:auto}
+.ov.open .qmodal{transform:scale(1) translateY(0)}
+.qprog{display:flex;gap:5px;margin-bottom:30px}
+.qdot{flex:1;height:3px;border-radius:100px;background:var(--bdr);transition:all .4s}
+.qdot.done{background:var(--gold)}
+.qdot.active{background:rgba(212,168,67,.45)}
+.qstep-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.qstep{display:none}
+.qstep.active{display:block}
+.qquestion{font-family:var(--fd);font-size:26px;font-weight:400;line-height:1.22;margin-bottom:8px}
+.qhint{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.qhint strong{color:var(--dim)}
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:26px}
+.qopts.t3{grid-template-columns:repeat(3,1fr)}
+.qopt{padding:18px 13px 16px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--card);cursor:pointer;text-align:center;transition:all .22s;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;overflow:hidden}
+.qopt:hover{border-color:var(--bdr2);background:var(--card2)}
+.qopt.sel{border-color:var(--gold-b);background:var(--gold-bg)}
+.opt-ico{font-size:30px;line-height:1}
+.opt-lbl{font-size:14px;font-weight:600;line-height:1.2}
+.opt-sub{font-size:11px;color:var(--muted);line-height:1.4}
+.opt-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:100px;margin-top:2px}
+.bh{background:rgba(232,67,147,.2);color:var(--pink)}
+.bc{background:rgba(62,207,207,.15);color:var(--cyan)}
+.bg{background:rgba(62,206,138,.15);color:var(--green)}
+.fpills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}
+.fp{padding:5px 12px;border-radius:100px;font-size:11px;font-weight:500;border:1px solid var(--bdr)}
+.fp-g{background:var(--gold-bg);border-color:var(--gold-b);color:var(--gold)}
+.fp-c{background:var(--cyan-bg);border-color:rgba(62,207,207,.3);color:var(--cyan)}
+.fp-p{background:var(--pink-bg);border-color:rgba(232,67,147,.3);color:var(--pink)}
+.fp-gr{background:var(--green-bg);border-color:rgba(62,206,138,.3);color:var(--green)}
+
+.qslider-wrap{margin-bottom:26px}
+.slval{text-align:center;font-family:var(--fd);font-size:52px;color:var(--gold);line-height:1;margin-bottom:8px}
+.slval span{font-size:20px;color:var(--muted);font-family:var(--fb)}
+input[type=range].qsl{width:100%;-webkit-appearance:none;height:5px;border-radius:100px;background:var(--bdr);outline:none;margin:12px 0 8px}
+input[type=range].qsl::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 0 6px var(--gold-bg);transition:box-shadow .2s}
+input[type=range].qsl::-webkit-slider-thumb:hover{box-shadow:0 0 0 10px var(--gold-bg)}
+.sll{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.qtxt{width:100%;padding:14px 18px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--rs);color:var(--text);font-family:var(--fb);font-size:14px;outline:none;margin-bottom:10px;transition:border-color .2s}
+.qtxt:focus{border-color:var(--gold-b);background:var(--card2)}
+.qtxt::placeholder{color:var(--muted)}
+.optnote{font-size:11px;color:var(--muted);margin-bottom:22px;display:block}
+.qnav{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.qback{background:none;border:none;color:var(--muted);cursor:pointer;font-family:var(--fb);font-size:13px;display:flex;align-items:center;gap:6px;padding:8px 0;transition:color .2s}
+.qback:hover{color:var(--text)}
+.btn-p{background:var(--gold);color:#0a0800;border:none;border-radius:100px;padding:13px 28px;font-family:var(--fb);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s,transform .12s;display:inline-flex;align-items:center;gap:8px}
+.btn-p:hover{background:var(--gold-l)}
+.btn-p:active{transform:scale(.97)}
+.btn-p:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-g{background:transparent;color:var(--muted);border:1px solid var(--bdr);border-radius:100px;padding:12px 26px;font-family:var(--fb);font-size:13px;cursor:pointer;transition:all .2s}
+.btn-g:hover{border-color:var(--bdr2);color:var(--text)}
+.closex{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--bdr);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;line-height:1;z-index:10}
+.closex:hover{background:var(--card2);color:var(--text)}
+
+.rmodal{background:var(--surface);border:1px solid var(--bdr2);border-radius:26px;padding:42px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;transform:scale(.88) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.ov.open .rmodal{transform:scale(1) translateY(0)}
+.rhdr{text-align:center;margin-bottom:30px}
+.rgbadge{display:inline-flex;align-items:center;gap:8px;padding:8px 22px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;animation:gbb .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes gbb{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.rtitle{font-family:var(--fd);font-size:38px;font-weight:400;margin-bottom:12px;line-height:1.08;animation:fu .4s ease .1s both}
+.rdesc{color:var(--dim);font-size:14px;line-height:1.8;max-width:420px;margin:0 auto 28px;animation:fu .4s ease .18s both}
+.scores-sec{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:20px 22px;margin-bottom:28px;animation:fu .4s ease .24s both}
+.scores-ttl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.srow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.srow:last-child{margin-bottom:0}
+.slbl{font-size:12px;color:var(--dim);width:170px;flex-shrink:0}
+.sbwrap{flex:1;height:6px;background:var(--bdr);border-radius:100px;overflow:hidden}
+.sb{height:100%;border-radius:100px;transition:width .9s cubic-bezier(.4,0,.2,1);width:0}
+.snum{font-size:12px;font-weight:600;color:var(--text);width:42px;text-align:right;flex-shrink:0}
+.rfilms-ttl{font-family:var(--fd);font-size:22px;font-weight:400;margin-bottom:16px;padding-top:24px;border-top:1px solid var(--bdr)}
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:28px}
+.rcard{border-radius:var(--rs);overflow:hidden;background:var(--card);border:1px solid var(--bdr);transition:transform .3s,border-color .2s;cursor:pointer}
+.rcard:hover{transform:translateY(-4px);border-color:var(--bdr2)}
+.rcard-poster{width:100%;height:170px;object-fit:cover;display:block;background:var(--card2)}
+.rcard-pfb{height:170px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;background:var(--card2)}
+.rcard-pfb::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 60%)}
+.rcard-r{position:absolute;bottom:8px;right:8px;z-index:1;background:var(--gold);color:#0a0800;font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px}
+.rcard-info{padding:10px 12px 12px}
+.rcard-ttl{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.rcard-meta{font-size:10px;color:var(--muted)}
+.ractions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+.loading-ov{position:fixed;inset:0;background:rgba(8,8,18,.97);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+.filmstrip{display:flex;gap:4px;overflow:hidden}
+.ff{width:22px;height:34px;border:2px solid var(--gold);border-radius:2px;flex-shrink:0;animation:ffk .5s ease infinite alternate}
+.ff:nth-child(odd){animation-delay:.25s}
+@keyframes ffk{from{opacity:.4}to{opacity:1}}
+.ltxt{font-family:var(--fd);font-size:22px;color:var(--gold);animation:ppf 1.2s ease infinite}
+.lsub{font-size:13px;color:var(--muted);animation:ppf 1.2s ease infinite .3s}
+@keyframes ppf{0%,100%{opacity:.5}50%{opacity:1}}
+
+footer{text-align:center;padding:40px 44px;color:var(--muted);font-size:12px;border-top:1px solid var(--bdr);position:relative;z-index:1;line-height:2}
+
+@media(max-width:680px){
+  header{padding:0 18px}
+  nav{display:none}
+  .hero{
+    padding:50px 18px 32px;
+    min-height:auto;
+  }
+  .hero-inner{max-width:100%}
+  .search-row{
+    flex-direction:column;
+    align-items:center;
+  }
+  .search-wrap{
+    max-width:100%;
+    width:100%;
+  }
+  .btn-qh{width:100%;justify-content:center}
+  .stats-bar{padding:20px 18px;overflow-x:auto;justify-content:flex-start}
+  .stat{padding:0 20px;flex-shrink:0}
+  .pills{padding:20px 18px 0;justify-content:center}
+  .section-hd,.movies-grid{padding-left:18px;padding-right:18px}
+  .movies-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .qmodal,.rmodal,.popup{padding:26px 18px}
+  .rgrid{grid-template-columns:repeat(2,1fr)}
+  .qopts.t3{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="ambiglow"></div>
+
+<header>
+  <a href="#" class="logo"><div class="logo-icon">🎬</div>Movie<span>Match</span></a>
+  <nav><a href="#">Découvrir</a><a href="#">Genres</a><a href="#">Top Films</a></nav>
+  <div class="nav-right">
+    <div id="apiDot"></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Ton prochain film<br><em>t'attend déjà</em></h1>
+    <p>Plus besoin de scroller 45 min pour rien. Réponds au quiz, on analyse ton profil et on prédit ton genre idéal du soir.</p>
+    <div class="search-row">
+      <div class="search-wrap">
+        <svg class="s-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-bar" placeholder="Titre, acteur, réalisateur..." id="searchInput" onclick="openPopup()">
+      </div>
+      <button class="btn-qh" onclick="startQuiz()">🎯 Faire le quiz</button>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-n">6 226</div><div class="stat-l">Films analysés</div></div>
+  <div class="stat"><div class="stat-n">4</div><div class="stat-l">Genres ML</div></div>
+  <div class="stat"><div class="stat-n">11</div><div class="stat-l">Features IA</div></div>
+  <div class="stat"><div class="stat-n" id="statAcc">—</div><div class="stat-l">Accuracy modèle</div></div>
+</div>
+
+<div class="pills">
+  <button class="pill active" onclick="filterG('all',this)">Tous</button>
+  <button class="pill" onclick="filterG('Drama',this)">🎭 Drame</button>
+  <button class="pill" onclick="filterG('Action',this)">⚡ Action</button>
+  <button class="pill" onclick="filterG('Comedy',this)">😄 Comédie</button>
+  <button class="pill" onclick="filterG('Crime_Horror',this)">🔪 Crime &amp; Horreur</button>
+</div>
+
+<div class="section-hd"><h2>Films à découvrir</h2><span id="movieCount">20 films</span></div>
+<div class="movies-grid" id="moviesGrid"></div>
+
+<footer>
+  MovieMatch &mdash; Projet IA · Naive Bayes + Arbre de décision · Dataset IMDb<br>
+  <span style="opacity:.4">Features ML : Custom_Popularity · Blockbuster_Score · Hidden_Gem_Score · Votes_Log · Rating×Votes · Recent_Popularity · High_Quality</span>
+</footer>
+
+<div class="ov" id="popupOv" onclick="closeBack(event,'popupOv')">
+  <div class="popup">
+    <div class="popup-tape">⏸ Hé, on t'a vu hésiter</div>
+    <button class="closex" onclick="closeOv('popupOv')">✕</button>
+    <span class="popup-emo">🍕</span>
+    <h2>Ton repas est en train de refroidir...</h2>
+    <p>Scroller 47 minutes, lire des synopsis, regarder 12 bandes-annonces... <strong>pour finalement mettre le même film qu'il y a deux semaines.</strong> On connaît.<br><br>
+    Notre IA analyse <strong>6 226 films</strong> avec 11 features (Blockbuster Score, Hidden Gem Score, popularité récente...) et trouve ton genre en <strong>2 minutes top chrono.</strong><br><br>
+    Ton repas mérite mieux. Ton canapé aussi. 🛋️</p>
+    <div class="pop-btns">
+      <button class="btn-p" style="justify-content:center" onclick="closeOv('popupOv');startQuiz()">🎯 Faire le quiz maintenant</button>
+      <button class="btn-g" onclick="closeOv('popupOv')">Je préfère souffrir encore un peu</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="quizOv">
+  <div class="qmodal">
+    <button class="closex" onclick="closeOv('quizOv')">✕</button>
+    <div class="qprog" id="qProg"></div>
+
+    <div class="qstep active" id="qs1">
+      <div class="qstep-lbl">Étape 1/8 · Émotion</div>
+      <h2 class="qquestion">Ce soir, tu veux ressentir quoi ?</h2>
+      <p class="qhint">Sois honnête, c'est pour la science 🧪</p>
+      <div class="qopts">
+        <div class="qopt" onclick="pick(this,'emo','rire')"><span class="opt-ico">😄</span><span class="opt-lbl">Rire</span><span class="opt-sub">Légèreté, humour</span></div>
+        <div class="qopt" onclick="pick(this,'emo','pleurer')"><span class="opt-ico">😢</span><span class="opt-lbl">Pleurer</span><span class="opt-sub">Émotions fortes</span></div>
+        <div class="qopt" onclick="pick(this,'emo','stresse')"><span class="opt-ico">😨</span><span class="opt-lbl">Être stressé</span><span class="opt-sub">Suspense, tension</span></div>
+        <div class="qopt" onclick="pick(this,'emo','excite')"><span class="opt-ico">🔥</span><span class="opt-lbl">L'adrénaline</span><span class="opt-sub">Excitation, action</span></div>
+      </div>
+      <div class="qnav"><div></div><button class="btn-p" id="bn1" onclick="goNext()" disabled>Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs2">
+      <div class="qstep-lbl">Étape 2/8 · Intention</div>
+      <h2 class="qquestion">Tu allumes ce film pour...</h2>
+      <div class="qopts">
+        <div class="qopt" onclick="pick(this,'but','detendre')"><span class="opt-ico">🛋️</span><span class="opt-lbl">Se détendre</span><span class="opt-sub">Fin de journée calme</span></div>
+        <div class="qopt" onclick="pick(this,'but','reflechir')"><span class="opt-ico">💭</span><span class="opt-lbl">Réfléchir</span><span class="opt-sub">Un film qui marque</span></div>
+        <div class="qopt" onclick="pick(this,'but','emotions')"><span class="opt-ico">💫</span><span class="opt-lbl">Ressentir</span><span class="opt-sub">Voyage émotionnel</span></div>
+        <div class="qopt" onclick="pick(this,'but','action')"><span class="opt-ico">⚡</span><span class="opt-lbl">Vivre l'action</span><span class="opt-sub">Effets, rythme, héros</span></div>
+      </div>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" id="bn2" onclick="goNext()" disabled>Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs3">
+      <div class="qstep-lbl">Étape 3/8 · Ambiance</div>
+      <h2 class="qquestion">Quelle ambiance ce soir ?</h2>
+      <div class="qopts">
+        <div class="qopt" onclick="pick(this,'amb','legere')"><span class="opt-ico">☀️</span><span class="opt-lbl">Légère</span><span class="opt-sub">Feel-good, fun</span></div>
+        <div class="qopt" onclick="pick(this,'amb','sombre')"><span class="opt-ico">🌑</span><span class="opt-lbl">Sombre</span><span class="opt-sub">Moody, profonde</span></div>
+        <div class="qopt" onclick="pick(this,'amb','intense')"><span class="opt-ico">⚡</span><span class="opt-lbl">Intense</span><span class="opt-sub">Aucun temps mort</span></div>
+        <div class="qopt" onclick="pick(this,'amb','realiste')"><span class="opt-ico">🎭</span><span class="opt-lbl">Réaliste</span><span class="opt-sub">Ancrée dans le vrai</span></div>
+      </div>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" id="bn3" onclick="goNext()" disabled>Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs4">
+      <div class="qstep-lbl">Étape 4/8 · Type de film</div>
+      <h2 class="qquestion">Blockbuster ou pépite cachée ?</h2>
+      <p class="qhint">Notre IA calcule le <strong>Blockbuster Score</strong> (60% votes + 40% box office) et le <strong>Hidden Gem Score</strong> (qualité × rareté) pour chaque film du dataset.</p>
+      <div class="fpills">
+        <span class="fp fp-g">🍿 Blockbuster = 60% votes + 40% gross</span>
+        <span class="fp fp-c">💎 Hidden Gem = rating × (1 − popularité)</span>
+        <span class="fp fp-p">⚡ Recent Pop = votes ÷ âge</span>
+        <span class="fp fp-gr">⭐ High Quality = IMDB &gt; 8</span>
+      </div>
+      <div class="qopts">
+        <div class="qopt" onclick="pick(this,'type','blockbuster')"><span class="opt-ico">🍿</span><span class="opt-lbl">Blockbuster</span><span class="opt-sub">Millions de vues, effets XXL</span><span class="opt-badge bh">Blockbuster Score</span></div>
+        <div class="qopt" onclick="pick(this,'type','gem')"><span class="opt-ico">💎</span><span class="opt-lbl">Pépite cachée</span><span class="opt-sub">Méconnu mais excellent</span><span class="opt-badge bc">Hidden Gem Score</span></div>
+        <div class="qopt" onclick="pick(this,'type','quality')"><span class="opt-ico">⭐</span><span class="opt-lbl">Très bien noté</span><span class="opt-sub">IMDB &gt; 8, top du top</span><span class="opt-badge bg">High Quality</span></div>
+        <div class="qopt" onclick="pick(this,'type','recent')"><span class="opt-ico">🚀</span><span class="opt-lbl">Tendance récente</span><span class="opt-sub">Buzz maintenant</span><span class="opt-badge bh">Recent Popularity</span></div>
+      </div>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" id="bn4" onclick="goNext()" disabled>Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs5">
+      <div class="qstep-lbl">Étape 5/8 · Époque</div>
+      <h2 class="qquestion">Classiques ou modernes ?</h2>
+      <div class="qopts t3">
+        <div class="qopt" onclick="pick(this,'epo','classique')"><span class="opt-ico">🎞️</span><span class="opt-lbl">Classiques</span><span class="opt-sub">Avant 2000</span></div>
+        <div class="qopt" onclick="pick(this,'epo','moderne')"><span class="opt-ico">🎬</span><span class="opt-lbl">Modernes</span><span class="opt-sub">2000 et après</span></div>
+        <div class="qopt" onclick="pick(this,'epo','mixte')"><span class="opt-ico">🌀</span><span class="opt-lbl">Peu importe</span><span class="opt-sub">Les deux</span></div>
+      </div>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" id="bn5" onclick="goNext()" disabled>Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs6">
+      <div class="qstep-lbl">Étape 6/8 · Acteur favori</div>
+      <h2 class="qquestion">Un acteur que tu adores ?</h2>
+      <p class="qhint">L'algorithme filtrera sur les colonnes Star1, Star2, Star3, Star4 du dataset IMDb</p>
+      <input class="qtxt" id="actorInput" type="text" placeholder="Ex: Morgan Freeman, Scarlett Johansson...">
+      <span class="optnote">✦ Optionnel — laisse vide si tu n'as pas de préférence</span>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" onclick="goNext()">Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs7">
+      <div class="qstep-lbl">Étape 7/8 · Réalisateur</div>
+      <h2 class="qquestion">Un réalisateur de prédilection ?</h2>
+      <p class="qhint">L'algorithme filtrera sur la colonne Director du dataset IMDb</p>
+      <input class="qtxt" id="dirInput" type="text" placeholder="Ex: Christopher Nolan, Stanley Kubrick...">
+      <span class="optnote">✦ Optionnel — laisse vide si tu n'as pas de préférence</span>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" onclick="goNext()">Suivant →</button></div>
+    </div>
+
+    <div class="qstep" id="qs8">
+      <div class="qstep-lbl">Étape 8/8 · Note minimum</div>
+      <h2 class="qquestion">Note IMDb minimum ?</h2>
+      <p class="qhint">Glisse pour ajuster ton niveau d'exigence 🎯</p>
+      <div class="qslider-wrap">
+        <div class="slval" id="rVal">7.5<span>/10</span></div>
+        <input type="range" class="qsl" id="rSlider" min="6" max="9.5" step="0.5" value="7.5" oninput="setRating(this.value)">
+        <div class="sll"><span>Ouvert (6.0)</span><span>Ultra-sélectif (9.5)</span></div>
+      </div>
+      <div class="qnav"><button class="qback" onclick="goPrev()">← Retour</button><button class="btn-p" onclick="showResults()">🎬 Voir mon résultat</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="resOv" onclick="closeBack(event,'resOv')">
+  <div class="rmodal">
+    <button class="closex" onclick="closeOv('resOv')">✕</button>
+    <div class="rhdr">
+      <div class="rgbadge" id="rgBadge"></div>
+      <h2 class="rtitle" id="rtitle"></h2>
+      <p class="rdesc" id="rdesc"></p>
+    </div>
+    <div class="scores-sec">
+      <div class="scores-ttl">📊 Scores ML calculés pour ton profil</div>
+      <div id="scoreRows"></div>
+    </div>
+    <h3 class="rfilms-ttl">Films sélectionnés pour toi ce soir</h3>
+    <div class="rgrid" id="rgrid"></div>
+    <div class="ractions">
+      <button class="btn-p" onclick="closeOv('resOv')">Explorer le catalogue</button>
+      <button class="btn-g" onclick="restartQuiz()">Refaire le quiz</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MOVIES=[
+  {id:1,t:'The Shawshank Redemption',y:1994,g:'Drama',mg:'Drama',r:9.3,d:'Frank Darabont',stars:['Tim Robbins','Morgan Freeman'],v:2343110,gross:28341469,img:'https://m.media-amazon.com/images/M/MV5BMDFkYTc0MGEtZmNhMC00ZDIzLWFmNTEtODM1ZmRlYWMwMWFmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX400.jpg'},
+  {id:2,t:'The Godfather',y:1972,g:'Drama',mg:'Drama',r:9.2,d:'Francis Ford Coppola',stars:['Marlon Brando','Al Pacino','James Caan'],v:1620367,gross:134966411,img:'https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX400.jpg'},
+  {id:3,t:"Schindler's List",y:1993,g:'Drama',mg:'Drama',r:8.9,d:'Steven Spielberg',stars:['Liam Neeson','Ralph Fiennes'],v:1383613,gross:96898818,img:'https://m.media-amazon.com/images/M/MV5BNDE4OTMxMTctNmRhYy00NWE2LTg3YzItYTk3M2UwOTU5Njg4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX400.jpg'},
+  {id:4,t:'Forrest Gump',y:1994,g:'Drama',mg:'Drama',r:8.8,d:'Robert Zemeckis',stars:['Tom Hanks','Robin Wright'],v:1994226,gross:330252182,img:'https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX400.jpg'},
+  {id:5,t:'12 Angry Men',y:1957,g:'Drama',mg:'Drama',r:9.0,d:'Sidney Lumet',stars:['Henry Fonda','Lee J. Cobb'],v:779535,gross:955000,img:'https://m.media-amazon.com/images/M/MV5BMWU4N2FjNzYtNTVkNC00NzQ0LTg0MjAtYTJlMjFhNGUxZDFmXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_SX400.jpg'},
+  {id:6,t:'The Dark Knight',y:2008,g:'Action',mg:'Action',r:9.0,d:'Christopher Nolan',stars:['Christian Bale','Heath Ledger'],v:2577993,gross:534858444,img:'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX400.jpg'},
+  {id:7,t:'Inception',y:2010,g:'Action',mg:'Action',r:8.8,d:'Christopher Nolan',stars:['Leonardo DiCaprio','Joseph Gordon-Levitt'],v:2313879,gross:292576195,img:'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX400.jpg'},
+  {id:8,t:'Interstellar',y:2014,g:'Adventure',mg:'Action',r:8.7,d:'Christopher Nolan',stars:['Matthew McConaughey','Anne Hathaway'],v:1826259,gross:188020017,img:'https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX400.jpg'},
+  {id:9,t:'The Matrix',y:1999,g:'Action',mg:'Action',r:8.7,d:'Lana Wachowski',stars:['Keanu Reeves','Laurence Fishburne'],v:1835004,gross:171479930,img:'https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX400.jpg'},
+  {id:10,t:'Mad Max: Fury Road',y:2015,g:'Action',mg:'Action',r:8.1,d:'George Miller',stars:['Tom Hardy','Charlize Theron'],v:1024003,gross:154058340,img:'https://m.media-amazon.com/images/M/MV5BN2EwM2I5OWMtMGQyMi00Zjg1LWJkNTctZTdjYTA4OGUwZjMyXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX400.jpg'},
+  {id:11,t:'The Grand Budapest Hotel',y:2014,g:'Comedy',mg:'Comedy',r:8.1,d:'Wes Anderson',stars:['Ralph Fiennes','Tony Revolori'],v:770272,gross:59267015,img:'https://m.media-amazon.com/images/M/MV5BMzM5NjUxOTEyMl5BMl5BanBnXkFtZTgwNjEyMDM0MDE@._V1_SX400.jpg'},
+  {id:12,t:'La vita è bella',y:1997,g:'Comedy',mg:'Comedy',r:8.6,d:'Roberto Benigni',stars:['Roberto Benigni','Nicoletta Braschi'],v:665340,gross:57598247,img:'https://m.media-amazon.com/images/M/MV5BYmJmM2Q4NmMtYThmNC00ZjRlLWEyZmItZTIwOTBlZDQ3NTQ1XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX400.jpg'},
+  {id:13,t:'Parasite',y:2019,g:'Comedy',mg:'Comedy',r:8.5,d:'Bong Joon-ho',stars:['Song Kang-ho','Lee Sun-kyun'],v:817870,gross:53369749,img:'https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX400.jpg'},
+  {id:14,t:'The Intouchables',y:2011,g:'Comedy',mg:'Comedy',r:8.5,d:'Olivier Nakache',stars:['François Cluzet','Omar Sy'],v:855793,gross:13182521,img:'https://m.media-amazon.com/images/M/MV5BMTYxNDA3MDQwNl5BMl5BanBnXkFtZTcwNTU4Mzc1Nw@@._V1_SX400.jpg'},
+  {id:15,t:'Amélie',y:2001,g:'Comedy',mg:'Comedy',r:8.3,d:'Jean-Pierre Jeunet',stars:['Audrey Tautou','Mathieu Kassovitz'],v:733799,gross:33225499,img:'https://m.media-amazon.com/images/M/MV5BNDg4NjM1YjMtYmNhZC00MjM0LWFiZmYtNGY1YjA3MzZmODc5XkEyXkFqcGdeQXVyNDk3NzU2MTQ@._V1_SX400.jpg'},
+  {id:16,t:'Pulp Fiction',y:1994,g:'Crime',mg:'Crime_Horror',r:8.9,d:'Quentin Tarantino',stars:['John Travolta','Uma Thurman','Samuel L. Jackson'],v:2074028,gross:107928762,img:'https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX400.jpg'},
+  {id:17,t:'Goodfellas',y:1990,g:'Crime',mg:'Crime_Horror',r:8.7,d:'Martin Scorsese',stars:['Ray Liotta','Robert De Niro','Joe Pesci'],v:1124740,gross:46836394,img:'https://m.media-amazon.com/images/M/MV5BY2NkZjEzMDgtN2RjYy00YzM1LWI4ZmQtMjIwYjFjNmI3ZGEwXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX400.jpg'},
+  {id:18,t:'Se7en',y:1995,g:'Crime',mg:'Crime_Horror',r:8.6,d:'David Fincher',stars:['Brad Pitt','Morgan Freeman'],v:1567897,gross:100125643,img:'https://m.media-amazon.com/images/M/MV5BOTUwODM5MTctZjczMi00OTk4LTg3NWUtNmVhMTAzNTNjYjcyXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX400.jpg'},
+  {id:19,t:'The Silence of the Lambs',y:1991,g:'Crime',mg:'Crime_Horror',r:8.6,d:'Jonathan Demme',stars:['Jodie Foster','Anthony Hopkins'],v:1392988,gross:130742922,img:'https://m.media-amazon.com/images/M/MV5BNjNhZTk0ZmEtNjJhMi00YzFlLWE1MmEtYzM1M2ZmMGMwMTU4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX400.jpg'},
+  {id:20,t:'Psycho',y:1960,g:'Horror',mg:'Crime_Horror',r:8.5,d:'Alfred Hitchcock',stars:['Anthony Perkins','Janet Leigh'],v:697907,gross:32000000,img:'https://m.media-amazon.com/images/M/MV5BNTQwNDM1YzItNDAxZC00NWY2LTk0M2UtNDIwNWI5OGUyNWUxXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX400.jpg'},
+];
+const GC={Drama:{lbl:'Drame',clr:'#d4a843',bg:'rgba(212,168,67,.15)',css:'gd',ico:'🎭'},Action:{lbl:'Action',clr:'#3ecfcf',bg:'rgba(62,207,207,.12)',css:'ga',ico:'⚡'},Comedy:{lbl:'Comédie',clr:'#3ece8a',bg:'rgba(62,206,138,.12)',css:'gc',ico:'😄'},Crime_Horror:{lbl:'Crime & Horreur',clr:'#e84393',bg:'rgba(232,67,147,.12)',css:'gh',ico:'🔪'}};
+const GDESC={Drama:'Contemplatif et émotionnel — tu aimes les histoires qui durent bien après le générique de fin.',Action:'Tu veux du rythme, de l\'adrénaline et un héros qui s\'en sort. L\'écran va vibrer.',Comedy:'La bonne humeur avant tout. Ce soir c\'est légèreté et sourires garantis.',Crime_Horror:'Frissonner depuis ton canapé et résoudre des mystères. Dors bien après... si tu peux.'};
+const FBGS={Drama:'linear-gradient(150deg,#6B4A1A,#3D1E00)',Action:'linear-gradient(150deg,#0D1B4A,#050510)',Comedy:'linear-gradient(150deg,#1B3A6B,#0A2520)',Crime_Horror:'linear-gradient(150deg,#1A0505,#4A0000)'};
+const SCORE_COLORS=['#d4a843','#e84393','#3ecfcf','#3ece8a','#d4a843','#e84393','#3ecfcf'];
+
+function computeScores(m){
+  const maxV=2577993,maxG=534858444;
+  const vs=m.v/maxV,rs=(m.r-6)/(9.3-6),gs=m.gross/maxG,age=2026-m.y;
+  return{
+    'Custom Popularity':Math.min(0.4*vs+0.4*rs+0.2*gs,1),
+    'Blockbuster Score':Math.min(0.6*vs+0.4*gs,1),
+    'Hidden Gem Score':Math.min(rs*(1-vs),1),
+    'Votes Log':Math.log1p(m.v)/Math.log1p(maxV),
+    'Rating × Votes':Math.min(m.r*vs/9.3,1),
+    'Recent Popularity':Math.min(vs/(age+1)*15,1),
+    'High Quality (>8)':m.r>8?1:0
+  };
+}
+
+let step=1,ans={};
+function renderMovies(gf='all'){
+  const films=gf==='all'?MOVIES:MOVIES.filter(m=>m.mg===gf);
+  document.getElementById('movieCount').textContent=`${films.length} film${films.length>1?'s':''}`;
+  document.getElementById('moviesGrid').innerHTML=films.map(m=>{
+    const g=GC[m.mg],sc=computeScores(m);
+    const tb=sc['Blockbuster Score']>0.35?`<span class="mc-tbadge" style="background:rgba(232,67,147,.75);color:#fff">🍿 Blockbuster</span>`:`<span class="mc-tbadge" style="background:rgba(62,207,207,.75);color:#fff">💎 Pépite</span>`;
+    return`<div class="mc ${g.css}">
+      <div style="position:relative">
+        <img class="mc-poster" src="${m.img}" alt="${m.t}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="mc-poster-err" style="display:none;background:${FBGS[m.mg]}"><span>🎬</span></div>
+        <div class="mc-ov"></div>
+        <div class="mc-rating">⭐ ${m.r}</div>${tb}
+      </div>
+      <div class="mc-info">
+        <div class="mc-title">${m.t}</div>
+        <div class="mc-meta">${m.y} · ${m.d}</div>
+        <span class="mc-genre">${g.lbl}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterG(g,el){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');renderMovies(g);}
+function openPopup(){document.getElementById('popupOv').classList.add('open')}
+function closeOv(id){document.getElementById(id).classList.remove('open')}
+function closeBack(e,id){if(e.target===e.currentTarget)closeOv(id)}
+function startQuiz(){
+  step=1;ans={};
+  document.querySelectorAll('.qopt').forEach(o=>o.classList.remove('sel'));
+  if(document.getElementById('actorInput'))document.getElementById('actorInput').value='';
+  if(document.getElementById('dirInput'))document.getElementById('dirInput').value='';
+  document.getElementById('rSlider').value=7.5;setRating(7.5);
+  for(let i=1;i<=8;i++){const s=document.getElementById('qs'+i);if(s)s.classList.remove('active')}
+  document.getElementById('qs1').classList.add('active');
+  ['bn1','bn2','bn3','bn4','bn5'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true});
+  updProg();document.getElementById('quizOv').classList.add('open');
+}
+function restartQuiz(){closeOv('resOv');startQuiz()}
+function pick(el,key,val){
+  el.closest('.qopts').querySelectorAll('.qopt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');ans[key]=val;
+  const b=document.getElementById('bn'+step);if(b)b.disabled=false;
+}
+function goNext(){
+  if(step<8){
+    document.getElementById('qs'+step).classList.remove('active');
+    step++;
+    document.getElementById('qs'+step).classList.add('active');
+    updProg();
+    const km={1:'emo',2:'but',3:'amb',4:'type',5:'epo'};
+    if(km[step]){const b=document.getElementById('bn'+step);if(b)b.disabled=!ans[km[step]];}
+  }
+}
+function goPrev(){
+  if(step>1){document.getElementById('qs'+step).classList.remove('active');step--;document.getElementById('qs'+step).classList.add('active');updProg();}
+}
+function updProg(){
+  document.getElementById('qProg').innerHTML=Array.from({length:8},(_,i)=>`<div class="qdot ${i+1<step?'done':i+1===step?'active':''}"></div>`).join('');
+}
+function setRating(v){document.getElementById('rVal').innerHTML=`${parseFloat(v).toFixed(1)}<span>/10</span>`;ans.note=parseFloat(v);}
+function calcGenre(){
+  const sc={Drama:0,Action:0,Comedy:0,Crime_Horror:0};
+  const maps={emo:{rire:{Comedy:5},pleurer:{Drama:5},stresse:{Crime_Horror:4,Action:1},excite:{Action:5,Crime_Horror:1}},but:{detendre:{Comedy:4,Drama:1},reflechir:{Drama:5},emotions:{Drama:4,Crime_Horror:1},action:{Action:5,Crime_Horror:1}},amb:{legere:{Comedy:5},sombre:{Drama:2,Crime_Horror:4},intense:{Action:4,Crime_Horror:2},realiste:{Drama:4,Crime_Horror:1}},type:{blockbuster:{Action:3,Comedy:1},gem:{Drama:3,Crime_Horror:1},quality:{Drama:2,Crime_Horror:2},recent:{Action:2,Comedy:2}},epo:{classique:{Drama:2,Crime_Horror:1},moderne:{Action:1,Comedy:1},mixte:{}}};
+  Object.entries(maps).forEach(([k,m])=>{if(ans[k]&&m[ans[k]])Object.entries(m[ans[k]]).forEach(([g,p])=>{sc[g]=(sc[g]||0)+p})});
+  return Object.entries(sc).sort((a,b)=>b[1]-a[1])[0][0];
+}
+function calcAvgScores(genre){
+  const gm=MOVIES.filter(m=>m.mg===genre);
+  const avg=arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+  const scores=gm.map(m=>computeScores(m));
+  const keys=Object.keys(scores[0]);
+  return Object.fromEntries(keys.map(k=>[k,avg(scores.map(s=>s[k]))]));
+}
+function showResults(){
+  ans.note=parseFloat(document.getElementById('rSlider').value);
+  ans.actor=(document.getElementById('actorInput').value||'').trim().toLowerCase();
+  ans.director=(document.getElementById('dirInput').value||'').trim().toLowerCase();
+  closeOv('quizOv');
+  const ld=document.createElement('div');
+  ld.className='loading-ov';
+  ld.innerHTML=`<div class="filmstrip">${Array.from({length:10},()=>'<div class="ff"></div>').join('')}</div><div class="ltxt">Analyse ML en cours...</div><div class="lsub">Calcul : Blockbuster Score · Hidden Gem · Rating×Votes</div>`;
+  document.body.appendChild(ld);
+  setTimeout(()=>{
+    document.body.removeChild(ld);
+    const genre=calcGenre();const gc=GC[genre];
+    const badge=document.getElementById('rgBadge');
+    badge.textContent=`${gc.ico} ${gc.lbl}`;
+    badge.style.cssText=`background:${gc.bg};color:${gc.clr};border:1px solid ${gc.clr}44`;
+    document.getElementById('rtitle').textContent=`Ce soir : ${gc.lbl}`;
+    document.getElementById('rdesc').textContent=GDESC[genre];
+    const avgs=calcAvgScores(genre);
+    document.getElementById('scoreRows').innerHTML=Object.entries(avgs).map(([lbl,val],i)=>`
+      <div class="srow">
+        <div class="slbl">${lbl}</div>
+        <div class="sbwrap"><div class="sb" style="background:${SCORE_COLORS[i]}" data-w="${(val*100).toFixed(0)}"></div></div>
+        <div class="snum">${(val*100).toFixed(0)}%</div>
+      </div>`).join('');
+    setTimeout(()=>document.querySelectorAll('.sb').forEach(b=>b.style.width=b.dataset.w+'%'),120);
+    let picks=MOVIES.filter(m=>m.mg===genre&&m.r>=(ans.note||7));
+    if(ans.epo==='classique')picks=picks.filter(m=>m.y<2000);
+    else if(ans.epo==='moderne')picks=picks.filter(m=>m.y>=2000);
+    if(ans.type==='blockbuster')picks.sort((a,b)=>(b.v+b.gross)-(a.v+a.gross));
+    else if(ans.type==='gem')picks.sort((a,b)=>(b.r*(1-b.v/2577993))-(a.r*(1-a.v/2577993)));
+    else if(ans.type==='quality')picks=picks.filter(m=>m.r>8).sort((a,b)=>b.r-a.r);
+    else if(ans.type==='recent')picks.sort((a,b)=>(b.v/(2026-b.y+1))-(a.v/(2026-a.y+1)));
+    if(ans.actor){const af=picks.filter(m=>m.stars.some(s=>s.toLowerCase().includes(ans.actor)));if(af.length)picks=af;}
+    if(ans.director){const df=picks.filter(m=>m.d.toLowerCase().includes(ans.director));if(df.length)picks=df;}
+    if(!picks.length)picks=MOVIES.filter(m=>m.mg===genre);
+    picks=picks.slice(0,3);
+    document.getElementById('rgrid').innerHTML=picks.map(m=>`
+      <div class="rcard">
+        <div style="position:relative">
+          <img class="rcard-poster" src="${m.img}" alt="${m.t}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="rcard-pfb" style="display:none;background:${FBGS[m.mg]}"><span>🎬</span></div>
+          <span class="rcard-r">⭐ ${m.r}</span>
+        </div>
+        <div class="rcard-info">
+          <div class="rcard-ttl">${m.t}</div>
+          <div class="rcard-meta">${m.y} · ${m.d}</div>
+        </div>
+      </div>`).join('');
+    renderMovies(genre);
+    document.querySelectorAll('.pill').forEach(p=>{const m=p.getAttribute('onclick')?.match(/filterG\('(.+?)'/);if(m)p.classList.toggle('active',m[1]===genre)});
+    document.getElementById('resOv').classList.add('open');
+  },1200);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();openPopup()}
+  if(e.key==='Escape')['popupOv','quizOv','resOv'].forEach(id=>closeOv(id))
+});
+async function checkAPI(){
+  try{
+    const r=await fetch('http://localhost:5000/api/health',{signal:AbortSignal.timeout(1500)});
+    if(r.ok){
+      const d=await r.json();
+      document.getElementById('apiDot').classList.add('on');
+      const acc=d.accuracy||d.global_accuracy||0;
+      document.getElementById('statAcc').textContent=(acc*100).toFixed(1)+'%';
+    }
+  }catch{}
+}
+renderMovies();updProg();setRating(7.5);checkAPI();
+</script>
+</body>
+</html>
